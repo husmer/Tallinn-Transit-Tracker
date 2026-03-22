@@ -17,14 +17,15 @@ const char* password = "YOUR_WIFI_PASSWORD";
 // API Configuration
 // ============================================
 const char* apiUrl = "https://api.dev.peatus.ee/routing/v1/routers/estonia/index/graphql";
-const char* graphqlQuery = "{\"query\":\"{ stop1: stop(id: \\\"estonia:STOP_ID_1\\\") { name stoptimesWithoutPatterns(numberOfDepartures: 5) { realtimeArrival headsign trip { route { shortName } } } } stop2: stop(id: \\\"estonia:STOP_ID_2\\\") { name stoptimesWithoutPatterns(numberOfDepartures: 5) { realtimeArrival headsign trip { route { shortName } } } } }\"}";
+const char* graphqlQuery = "{\"query\":\"{ stop1: stop(id: \\\"STOP_ID_1\\\") { name stoptimesWithoutPatterns(numberOfDepartures: 5) { realtimeArrival headsign trip { route { shortName } } } } stop2: stop(id: \\\"STOP_ID_2\\\") { name stoptimesWithoutPatterns(numberOfDepartures: 5) { realtimeArrival headsign trip { route { shortName } } } } }\"}";
 int lastHttpError = 0;
 
 // Time Configuration
 // ============================================
 const char* ntpServer = "pool.ntp.org";
-const long gmtOffset_sec = 2 * 3600;
-const int daylightOffset_sec = 3600;
+const long gmtOffset_sec = 0;
+const int daylightOffset_sec = 0;
+const char* timezone = "EET-2EEST,M3.5.0/3,M10.5.0/4";
 
 // LED Matrix Configuration
 // ============================================
@@ -109,6 +110,9 @@ void setup() {
   matrix->setTextColor(matrix->color565(255, 200, 0));
   matrix->print("WIFI...");
 
+  WiFi.disconnect(true);
+  delay(1000);
+  WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
   int wifiAttempts = 0;
@@ -151,6 +155,8 @@ void setup() {
   matrix->print("TIME SYNC...");
 
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  setenv("TZ", timezone, 1);
+  tzset();
 
   int timeAttempts = 0;
   while (time(nullptr) < 100000 && timeAttempts < 20) {
@@ -270,6 +276,8 @@ String queryTransitAPI() {
 
   if (httpCode == 200) {
     response = http.getString();
+    Serial.println("Raw response:");
+    Serial.println(response);
     Serial.println("✓ API success");
     lastHttpError = 0;  // Success
   } else {
@@ -422,6 +430,9 @@ void displayOnLED(int count) {
   for (int i = 0; i < count && displayedRows < 3; i++) {
     // Skip departures more than 99 minutes away
     if (allDepartures[i].minutesUntil > 99) {
+      Serial.printf("Skipping %s - %d mins (>99)\n",
+        allDepartures[i].routeNumber.c_str(),
+        allDepartures[i].minutesUntil);
       continue;
     }
 
