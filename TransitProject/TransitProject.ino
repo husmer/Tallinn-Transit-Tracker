@@ -16,7 +16,7 @@ const char* password = "YOUR_WIFI_PASSWORD";
 
 // API Configuration
 // ============================================
-const char* apiUrl = "https://api.dev.peatus.ee/routing/v1/routers/estonia/index/graphql";
+const char* apiUrl = "https://api.peatus.ee/routing/v1/routers/estonia/index/graphql";
 const char* graphqlQuery = "{\"query\":\"{ stop1: stop(id: \\\"STOP_ID_1\\\") { name stoptimesWithoutPatterns(numberOfDepartures: 5) { realtimeArrival headsign trip { route { shortName } } } } stop2: stop(id: \\\"STOP_ID_2\\\") { name stoptimesWithoutPatterns(numberOfDepartures: 5) { realtimeArrival headsign trip { route { shortName } } } } }\"}";
 int lastHttpError = 0;
 
